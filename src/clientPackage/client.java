@@ -1,5 +1,6 @@
 package clientPackage;
 
+import objectPackage.Operation;
 import java.io.*;
 import java.net.Socket;
 import java.util.Scanner;
@@ -8,13 +9,11 @@ public class client {
     public static void main(String[] args) {
         try {
             Socket socket = new Socket("localhost", 1234);
-            System.out.println("Connecté au serveur de calculatrice.");
+            System.out.println("Connecté au serveur de calculatrice (mode objet).");
 
-            OutputStream outputStream = socket.getOutputStream();
-            PrintWriter writer = new PrintWriter(outputStream, true);
-
-            InputStream inputStream = socket.getInputStream();
-            BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+            // Streams pour objet
+            ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
+            ObjectInputStream objectInputStream = new ObjectInputStream(socket.getInputStream());
 
             Scanner scanner = new Scanner(System.in);
             String line;
@@ -25,15 +24,25 @@ public class client {
                 String[] parts = line.split(" ");
 
                 if (parts.length == 3) {
-                    writer.println(parts[0]);
-                    writer.println(parts[1]);
-                    writer.println(parts[2]);
+                    try {
+                        double op1 = Double.parseDouble(parts[0]);
+                        String operator = parts[1];
+                        double op2 = Double.parseDouble(parts[2]);
 
+                        // Création de l'objet opération et envoi
+                        Operation operation = new Operation(op1, operator, op2);
+                        objectOutputStream.writeObject(operation);
+                        objectOutputStream.flush();
 
-                    String serverResponse = reader.readLine();
-                    System.out.println("Serveur : " + serverResponse);
+                        // Lecture du résultat envoyé par le serveur
+                        String result = (String) objectInputStream.readObject();
+                        System.out.println("Serveur : " + result);
+
+                    } catch (NumberFormatException e) {
+                        System.out.println("Les opérandes doivent être des nombres.");
+                    }
                 } else {
-                    System.out.println("Format d'opération incorrect. Veuillez utiliser : nombre opérateur nombre");
+                    System.out.println("Format incorrect. Utilisez : nombre opérateur nombre");
                 }
 
                 System.out.println("\nEntrez une nouvelle opération ou 'exit' pour quitter :");
@@ -43,7 +52,7 @@ public class client {
             socket.close();
             scanner.close();
 
-        } catch (IOException e) {
+        } catch (IOException | ClassNotFoundException e) {
             System.err.println("Erreur client : " + e.getMessage());
         }
     }

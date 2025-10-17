@@ -1,5 +1,6 @@
 package serverPackage;
 
+import objectPackage.Operation;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -8,69 +9,70 @@ public class server {
     public static void main(String[] args) {
         try {
             ServerSocket serverSocket = new ServerSocket(1234);
-            System.out.println("Le serveur est en attente de connexion...");
+            System.out.println("Serveur en attente de connexion...");
 
             Socket clientSocket = serverSocket.accept();
-            System.out.println("Client connecté depuis l'adresse : " + clientSocket.getRemoteSocketAddress());
+            System.out.println("Client connecté depuis : " + clientSocket.getRemoteSocketAddress());
 
-            InputStream inputStream = clientSocket.getInputStream();
-            BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+            // Streams objet
+            ObjectInputStream objectInputStream = new ObjectInputStream(clientSocket.getInputStream());
+            ObjectOutputStream objectOutputStream = new ObjectOutputStream(clientSocket.getOutputStream());
 
-            OutputStream outputStream = clientSocket.getOutputStream();
-            PrintWriter writer = new PrintWriter(outputStream, true); // 'true' pour autoFlush
+            Operation operation;
 
-            String op1Str, operator, op2Str;
+            while ((operation = (Operation) objectInputStream.readObject()) != null) {
+                double op1 = operation.getOperand1();
+                String operator = operation.getOperator();
+                double op2 = operation.getOperand2();
 
-            while ((op1Str = reader.readLine()) != null &&
-                    (operator = reader.readLine()) != null &&
-                    (op2Str = reader.readLine()) != null) {
+                double result = 0;
+                boolean error = false;
+                String response;
 
-                try {
-                    double op1 = Double.parseDouble(op1Str);
-                    double op2 = Double.parseDouble(op2Str);
-                    double result = 0;
-                    boolean error = false;
-
-                    switch (operator) {
-                        case "+":
-                            result = op1 + op2;
-                            break;
-                        case "-":
-                            result = op1 - op2;
-                            break;
-                        case "*":
-                            result = op1 * op2;
-                            break;
-                        case "/":
-                            if (op2 != 0) {
-                                result = op1 / op2;
-                            } else {
-                                writer.println("Erreur : Division par zéro !");
-                                error = true;
-                            }
-                            break;
-                        default:
-                            writer.println("Erreur : Opérateur non valide !");
+                switch (operator) {
+                    case "+":
+                        result = op1 + op2;
+                        break;
+                    case "-":
+                        result = op1 - op2;
+                        break;
+                    case "*":
+                        result = op1 * op2;
+                        break;
+                    case "/":
+                        if (op2 != 0) {
+                            result = op1 / op2;
+                        } else {
+                            response = "Erreur : Division par zéro !";
+                            objectOutputStream.writeObject(response);
+                            objectOutputStream.flush();
                             error = true;
-                            break;
-                    }
+                        }
+                        break;
+                    default:
+                        response = "Erreur : Opérateur non valide !";
+                        objectOutputStream.writeObject(response);
+                        objectOutputStream.flush();
+                        error = true;
+                        break;
+                }
 
-                    if (!error) {
-                        System.out.println("Calcul : " + op1 + " " + operator + " " + op2 + " = " + result);
-                        writer.println("Résultat = " + result);
-                    }
-
-                } catch (NumberFormatException e) {
-                    writer.println("Erreur : Les opérandes doivent être des nombres.");
+                if (!error) {
+                    System.out.println("Calcul : " + op1 + " " + operator + " " + op2 + " = " + result);
+                    response = "Résultat = " + result;
+                    objectOutputStream.writeObject(response);
+                    objectOutputStream.flush();
                 }
             }
 
-            System.out.println("Le client s'est déconnecté. Fermeture du serveur.");
+            System.out.println("Client déconnecté. Fermeture serveur.");
             clientSocket.close();
             serverSocket.close();
 
-        } catch (IOException e) {
-            System.err.println("Erreur sur le serveur : " + e.getMessage());
+        } catch (EOFException e) {
+            System.out.println("Le client a fermé la connexion.");
+        } catch (IOException | ClassNotFoundException e) {
+            System.err.println("Erreur serveur : " + e.getMessage());
         }
     }
 }
