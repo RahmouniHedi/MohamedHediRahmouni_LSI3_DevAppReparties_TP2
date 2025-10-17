@@ -1,95 +1,70 @@
-# Java Socket-Based Calculator (Object Mode)
+# 🧮 Java Client-Server Calculator
 
-## 📌 Overview
-This project demonstrates a **client-server application** in Java using **sockets** and **object serialization**. The client sends mathematical operations to the server as serialized objects, and the server processes the operation and returns the result.
+This project demonstrates a simple **client-server architecture** in Java where a client sends arithmetic operations to a server, and the server processes and returns the result.
 
----
+## 📦 Project Structure
 
-## ✅ Features
-- **Client-Server Communication** using TCP sockets.
-- **Object Serialization** for sending operations.
-- Supports basic arithmetic operations:
-  - Addition (`+`)
-  - Subtraction (`-`)
-  - Multiplication (`*`)
-  - Division (`/`) with zero-check.
-- Handles invalid input and operators gracefully.
-
----
-
-## 🛠️ Technologies Used
-- **Java SE**
-- **Socket Programming**
-- **Object Streams (ObjectInputStream & ObjectOutputStream)**
-
----
-
-## 📂 Project Structure
 ```
-├── clientPackage
-│   └── client.java        # Client-side code
+.
 ├── serverPackage
-│   └── server.java        # Server-side code
-└── objectPackage
-    └── Operation.java     # Serializable class for operations
+│   └── server.java
+└── clientPackage
+    └── client.java
 ```
 
----
+## 🚀 How It Works
 
-## 🚀 How to Run
-### 1. Compile the project
+- The **server** listens on port `1234` and waits for a client to connect.
+- The **client** connects to the server and sends arithmetic operations in the format:  
+  ```
+  operand1 operator operand2
+  ```
+  Example: `5 * 3`
+- The server parses the input, performs the calculation, and sends the result back to the client.
+
+## ✅ Supported Operations
+
+- Addition (`+`)
+- Subtraction (`-`)
+- Multiplication (`*`)
+- Division (`/`)
+
+## ⚠️ Error Handling
+
+- Division by zero returns an error message.
+- Invalid operators or non-numeric operands are handled gracefully.
+
+## 🛠️ How to Run
+
+### 1. Compile the Java files
+
 ```bash
-javac clientPackage/client.java serverPackage/server.java objectPackage/Operation.java
+javac serverPackage/server.java
+javac clientPackage/client.java
 ```
 
 ### 2. Start the server
+
 ```bash
 java serverPackage.server
 ```
 
-### 3. Start the client
+### 3. Start the client (in a separate terminal)
+
 ```bash
 java clientPackage.client
 ```
 
----
+## 📷 Example Interaction
 
-## 🖥️ Usage
-- After starting both server and client:
-  - Enter an operation in the format:
-    ```
-    number operator number
-    ```
-    Example:
-    ```
-    5 * 2
-    ```
-  - Type `exit` to close the client.
-
----
-
-## ⚠️ Error Handling
-- Invalid format → Displays: `Format incorrect. Utilisez : nombre opérateur nombre`
-- Non-numeric operands → Displays: `Les opérandes doivent être des nombres.`
-- Division by zero → Displays: `Erreur : Division par zéro !`
-- Invalid operator → Displays: `Erreur : Opérateur non valide !`
-
----
-
-## 📌 Example Output
-**Client:**
 ```
-Entrez une opération (ex: 5 * 2) ou 'exit' pour quitter :
-5 * 2
-Serveur : Résultat = 10.0
-```
+Client: 10 / 2
+Server: Résultat = 5.0
 
-**Server:**
-```
-Client connecté depuis : /127.0.0.1
-Calcul : 5.0 * 2.0 = 10.0
-```
+Client: 5 ^ 2
+Server: Erreur : Opérateur non valide !
 
----
-
+Client: 8 / 0
+Server: Erreur : Division par zéro !
+```
 
